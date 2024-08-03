@@ -137,7 +137,7 @@ internal fun MLContent(
         }
 
         TwoTextAreasTabs(
-            geminiText = listOf("Recipe text", "Nutrition text"),
+            geminiText = result,
             bitmap = bitmap,
             caloriesText = 500.toString(),
             onEvent = onEvent,

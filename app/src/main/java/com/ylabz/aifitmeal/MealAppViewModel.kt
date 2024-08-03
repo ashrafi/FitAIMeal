@@ -50,7 +50,8 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
     val unknownSafety = SafetySetting(HarmCategory.UNKNOWN, BlockThreshold.NONE)
 
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-1.5-flash",
+        modelName = "gemini-1.5-pro",
+        // modelName = "gemini-1.5-flash",
         // modelName = "gemini-pro-vision",
         // modelName = "gemini-1.5-pro-latest",
         // modelName = "gemini-pro-vision",
@@ -65,7 +66,7 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
 
     private val generativeModelChat = GenerativeModel(
         //modelName = "gemini-1.5-flash-latest",
-        modelName =  "gemini-1.5-pro-latest",
+        modelName =  "gemini-1.5-pro",
         apiKey = BuildConfig.apiKeyGem,
         safetySettings = listOf(
             dangerSafety
@@ -74,7 +75,7 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
 
     private var chat : Chat = generativeModelChat.startChat(
         history = listOf(
-            content(role = "user") { text("Hello, Any DIY info you can provide it will be greatly appreciated. Thank you.") },
+            content(role = "user") { text("Hello,Thank you for your help.") },
         )
     )
 

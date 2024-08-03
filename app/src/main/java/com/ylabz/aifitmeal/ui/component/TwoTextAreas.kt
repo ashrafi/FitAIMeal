@@ -235,7 +235,7 @@ fun PromptSection(
                     isLoading = true
                     try {
                         if (bitmap.value != null) {
-                            onEvent(MLEvent.GenAiPromptResponseImg(prompt, bitmap.value!!, index))
+                            onEvent(MLEvent.GenAiChatResponseImg(prompt, bitmap.value!!, index))
                         }
                     } catch (e: Exception) {
                         onErrorDismiss()
@@ -286,7 +286,7 @@ fun PromptSection(
 fun PreviewFourTextAreasTabs() {
     TwoTextAreasTabs(
         geminiText = listOf("Recipe text", "Nutrition text"),
-        bitmap = mutableStateOf(Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888)),
+        bitmap = remember { mutableStateOf(Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888))},
         caloriesText = "textFieldValue",
         onEvent = {},
         errorMessage = "Error occurred",

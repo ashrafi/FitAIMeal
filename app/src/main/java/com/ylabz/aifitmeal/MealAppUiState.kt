@@ -22,7 +22,7 @@ sealed interface MealAppUiState {
      * Text has been generated
      */
     data class Success(
-        var geminiResponses: List<String> = listOf("", "", "", ""),
+        var geminiResponses: List<String> = listOf("", ""),
         var currLocation : Location? = null
     ) : MealAppUiState {
         var responses by mutableStateOf(geminiResponses)
