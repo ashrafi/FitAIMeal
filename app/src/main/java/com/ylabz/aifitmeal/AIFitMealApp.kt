@@ -1,12 +1,18 @@
 package com.ylabz.aifitmeal
 
+import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionScreen
 import com.ylabz.aifitmeal.data.HealthConnectManager
+import com.ylabz.aifitmeal.ui.FoodPic
+import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionScreen
 import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionViewModel
 import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionViewModelFactory
 
@@ -14,41 +20,41 @@ import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionViewModel
 @Composable
 fun AIFitMealApp(healthConnectManager: HealthConnectManager) {
     val availability by healthConnectManager.availability
-
-
+    val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     val viewModel: ExerciseSessionViewModel = viewModel(
         factory = ExerciseSessionViewModelFactory(
             healthConnectManager = healthConnectManager
         )
     )
+
     val permissionsGranted by viewModel.permissionsGranted
-    val sessionsList by viewModel.sessionsList
     val permissions = viewModel.permissions
+
+    val totalCalories by viewModel.totalCalories.collectAsState()
+
+
     val onPermissionsResult = { viewModel.initialLoad() }
     val permissionsLauncher =
         rememberLauncherForActivityResult(viewModel.permissionsLauncher) {
             onPermissionsResult()
         }
-    ExerciseSessionScreen(
-        permissionsGranted = permissionsGranted,
-        permissions = permissions,
-        sessionsList = sessionsList,
-        uiState = viewModel.uiState,
-        onInsertClick = {
-            viewModel.insertExerciseSession()
-        },
-        onDetailsClick = { uid ->
-            //navController.navigate(Screen.ExerciseSessionDetail.route + "/" + uid)
-        },
-        onError = { exception ->
-            //showExceptionSnackbar(scaffoldState, scope, exception)
-        },
-        onPermissionsResult = {
-            viewModel.initialLoad()
-        },
-        onPermissionsLaunch = { values ->
-            permissionsLauncher.launch(values)
-        }
-    )
+    Column {
+        Text("Calories ${totalCalories}")
+        ExerciseSessionScreen(
+            permissionsGranted = permissionsGranted,
+            permissions = permissions,
+            uiState = viewModel.uiState,
+            readCalories = {
+                viewModel.getTotalCaloriesBurnedToday()
+            },
+            onPermissionsResult = {
+                viewModel.initialLoad()
+            },
+            onPermissionsLaunch = { values ->
+                permissionsLauncher.launch(values)
+            }
+        )
+        FoodPic(bitmap)
+    }
 
 }

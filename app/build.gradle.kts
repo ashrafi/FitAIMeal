@@ -56,6 +56,9 @@ dependencies {
     implementation(libs.androidx.health.connect)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.accompanist.permissions)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.compose.markdown)
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
 
 
     testImplementation(libs.junit)

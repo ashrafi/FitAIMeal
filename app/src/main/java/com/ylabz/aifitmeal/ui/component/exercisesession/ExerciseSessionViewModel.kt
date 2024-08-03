@@ -16,7 +16,9 @@
 package com.ylabz.aifitmeal.ui.component.exercisesession
 
 import android.os.RemoteException
+import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -28,7 +30,12 @@ import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ylabz.aifitmeal.UiState
+import com.ylabz.aifitmeal.data.ExerciseSessionData
 import com.ylabz.aifitmeal.data.HealthConnectManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
@@ -41,17 +48,10 @@ import kotlinx.coroutines.launch
 class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectManager) :
   ViewModel() {
   val permissions = setOf(
-    HealthPermission.getWritePermission(ExerciseSessionRecord::class),
-    HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-    HealthPermission.getWritePermission(StepsRecord::class),
-    HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class),
-    HealthPermission.getWritePermission(HeartRateRecord::class)
+    HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
   )
 
   var permissionsGranted = mutableStateOf(false)
-    private set
-
-  var sessionsList: MutableState<List<ExerciseSessionRecord>> = mutableStateOf(listOf())
     private set
 
   var uiState: UiState by mutableStateOf(UiState.Uninitialized)
@@ -59,39 +59,29 @@ class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectMa
 
   val permissionsLauncher = healthConnectManager.requestPermissionsActivityContract()
 
+
+  private val _totalCalories = MutableStateFlow("none")
+  var totalCalories: StateFlow<String> = _totalCalories.asStateFlow()
+
+
   fun initialLoad() {
     viewModelScope.launch {
       tryWithPermissionsCheck {
-        readExerciseSessions()
+        getTotalCaloriesBurnedToday()
       }
     }
   }
 
-  fun insertExerciseSession() {
+  fun getTotalCaloriesBurnedToday(){
     viewModelScope.launch {
       tryWithPermissionsCheck {
-        val startOfDay = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS)
-        val latestStartOfSession = ZonedDateTime.now().minusMinutes(30)
-        val offset = Random.nextDouble()
-
-        // Generate random start time between the start of the day and (now - 30mins).
-        val startOfSession = startOfDay.plusSeconds(
-          (Duration.between(startOfDay, latestStartOfSession).seconds * offset).toLong()
-        )
-        val endOfSession = startOfSession.plusMinutes(30)
-
-        healthConnectManager.writeExerciseSession(startOfSession, endOfSession)
-        readExerciseSessions()
+        val calories = healthConnectManager.getTotalCaloriesBurnedToday() ?: "bad"
+        Log.d("ExerciseSessionViewModel", "calories IN VIEW ODEL: $calories")
+        _totalCalories.value = calories
       }
     }
   }
 
-  private suspend fun readExerciseSessions() {
-    val startOfDay = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS)
-    val now = Instant.now()
-
-    sessionsList.value = healthConnectManager.readExerciseSessions(startOfDay.toInstant(), now)
-  }
 
   /**
    * Provides permission check and error handling for Health Connect suspend function calls.
@@ -124,7 +114,6 @@ class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectMa
   sealed class UiState {
     object Uninitialized : UiState()
     object Done : UiState()
-
     // A random UUID is used in each Error object to allow errors to be uniquely identified,
     // and recomposition won't result in multiple snackbars.
     data class Error(val exception: Throwable, val uuid: UUID = UUID.randomUUID()) : UiState()
@@ -143,4 +132,24 @@ class ExerciseSessionViewModelFactory(
     }
     throw IllegalArgumentException("Unknown ViewModel class")
   }
+}
+
+
+/* Future expansion
+var sessionsList: MutableState<List<ExerciseSessionRecord>> = mutableStateOf(listOf())
+  private set
+private val _sessionData = mutableStateOf<ExerciseSessionData?>(null)
+val sessionData: State<ExerciseSessionData?> = _sessionData
+fun readAssocreadAssociatedSessionDataiatedSessionData(uid: String) {
+  viewModelScope.launch {
+    tryWithPermissionsCheck {
+      _sessionData.value = healthConnectManager.readAssociatedSessionData(uid)
+    }
+  }
+}*/
+private suspend fun readExerciseSessions() {
+  val startOfDay = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS)
+  val now = Instant.now()
+
+  //sessionsList.value = healthConnectManager.readExerciseSessions(startOfDay.toInstant(), now)
 }

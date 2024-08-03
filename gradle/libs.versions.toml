@@ -16,6 +16,11 @@ healthConnect = "1.0.0-alpha11"
 #healthConnect = "1.1.0-alpha07"
 accompanistVersion = "0.33.1-alpha"
 
+materialIcons = "1.6.8"
+composeMarkdown = "0.5.2"
+lifecycleRuntimeComposeAndroidVersion = "2.8.4"
+
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,10 +40,15 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIcons" }
+# Markdown
+compose-markdown = {  module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown"}
+
 androidx-health-connect = { module = "androidx.health.connect:connect-client" , version.ref = "healthConnect"}
 
 #// ACCOMPANIST ////
 androidx-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistVersion" }
+androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroidVersion" }
 
 
 [plugins]

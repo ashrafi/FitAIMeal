@@ -15,13 +15,11 @@
  */
 package com.ylabz.aifitmeal.ui.component.exercisesession
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,8 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.records.ExerciseSessionRecord
-import com.ylabz.aifitmeal.ui.component.ExerciseSessionRow
-import java.time.ZonedDateTime
 import java.util.UUID
 
 /**
@@ -43,11 +39,8 @@ import java.util.UUID
 fun ExerciseSessionScreen(
   permissions: Set<String>,
   permissionsGranted: Boolean,
-  sessionsList: List<ExerciseSessionRecord>,
   uiState: ExerciseSessionViewModel.UiState,
-  onInsertClick: () -> Unit = {},
-  onDetailsClick: (String) -> Unit = {},
-  onError: (Throwable?) -> Unit = {},
+  readCalories: () -> Unit = {},
   onPermissionsResult: () -> Unit = {},
   onPermissionsLaunch: (Set<String>) -> Unit = {},
 ) {
@@ -67,19 +60,17 @@ fun ExerciseSessionScreen(
     // writing to Health Connect, the user is notified, and where the error is one that can be
     // recovered from, an attempt to do so is made.
     if (uiState is ExerciseSessionViewModel.UiState.Error && errorId.value != uiState.uuid) {
-      onError(uiState.exception)
+      Log.d("ExerciseSessionScreen", "Error advice: ${uiState.exception}")
       errorId.value = uiState.uuid
     }
   }
 
   if (uiState != ExerciseSessionViewModel.UiState.Uninitialized) {
-    LazyColumn(
-      modifier = Modifier.fillMaxSize(),
+    Column(
       verticalArrangement = Arrangement.Top,
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       if (!permissionsGranted) {
-        item {
           Button(
             onClick = {
               onPermissionsLaunch(permissions)
@@ -87,34 +78,18 @@ fun ExerciseSessionScreen(
           ) {
             Text(text = "permissions")//stringResource(R.string.permissions_button_label))
           }
-        }
       } else {
-        item {
           Button(
             modifier = Modifier
-              .fillMaxWidth()
               .height(48.dp)
               .padding(4.dp),
             onClick = {
-              onInsertClick()
+              readCalories()
             }
           ) {
-            Text("Insert Exercise Session") //stringResource(id = R.string.insert_exercise_session))
+            Text("check Cal") //stringResource(id = R.string.insert_exercise_session))
           }
-        }
-
-        items(sessionsList) { session ->
-          ExerciseSessionRow(
-            ZonedDateTime.ofInstant(session.startTime, session.startZoneOffset),
-            ZonedDateTime.ofInstant(session.endTime, session.endZoneOffset),
-            session.metadata.id,
-            session.title ?: "No Title",//stringResource(R.string.no_title),
-            onDetailsClick = { uid ->
-              onDetailsClick(uid)
-            }
-          )
         }
       }
     }
   }
-}

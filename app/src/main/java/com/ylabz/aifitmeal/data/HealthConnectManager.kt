@@ -17,6 +17,7 @@ package com.ylabz.aifitmeal.data
 
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,8 @@ import java.time.ZonedDateTime
 import kotlin.random.Random
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 // The minimum android level that can use Health Connect
 const val MIN_SUPPORTED_SDK = Build.VERSION_CODES.O_MR1
@@ -142,6 +145,26 @@ class HealthConnectManager(private val context: Context) {
   /**
    * TODO: Writes an [ExerciseSessionRecord] to Health Connect.
    */
+  suspend fun writeExerciseCalSession(start: ZonedDateTime, end: ZonedDateTime) {
+    healthConnectClient.insertRecords(
+      listOf(
+        TotalCaloriesBurnedRecord(
+          startTime = start.toInstant(),
+          startZoneOffset = start.offset,
+          endTime = end.toInstant(),
+          endZoneOffset = end.offset,
+          energy = Energy.calories((140 + Random.nextInt(20)) * 0.01)
+        )
+      ) + buildHeartRateSeries(start, end)
+    )
+  }
+
+
+
+
+  /**
+   * TODO: Writes an [ExerciseSessionRecord] to Health Connect.
+   */
   suspend fun writeExerciseSession(start: ZonedDateTime, end: ZonedDateTime) {
     healthConnectClient.insertRecords(
       listOf(
@@ -196,6 +219,7 @@ class HealthConnectManager(private val context: Context) {
       endZoneOffset = sessionEndTime.offset,
       samples = samples
     )
+
   }
 
   /**
@@ -295,6 +319,25 @@ class HealthConnectManager(private val context: Context) {
     return healthConnectClient.readRecords(request).records
   }
 
+  /**
+   * Gets the total calories burned for the current day.
+   */
+  suspend fun getTotalCaloriesBurnedToday(): String? {
+    val todayStart = LocalDate.now().atStartOfDay()
+    val todayEnd = todayStart.plusDays(1)
+    val timeRangeFilter = TimeRangeFilter.between(todayStart.toInstant(ZoneOffset.ofHours(0)), todayEnd.toInstant(ZoneOffset.ofHours(0)))
+    Log.d("HealthConnectManager", "timeRangeFilter: $timeRangeFilter")
+    val request = AggregateRequest(
+      metrics = setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL),
+      timeRangeFilter = timeRangeFilter
+    )
+
+    val response = healthConnectClient.aggregate(request)
+    Log.d("HealthConnectManager", "response: ${response[TotalCaloriesBurnedRecord.ENERGY_TOTAL]}")
+    return response[TotalCaloriesBurnedRecord.ENERGY_TOTAL].toString()
+  }
+
+
   private fun isSupported() = Build.VERSION.SDK_INT >= MIN_SUPPORTED_SDK
 
   // Represents the two types of messages that can be sent in a Changes flow.
@@ -303,6 +346,10 @@ class HealthConnectManager(private val context: Context) {
     data class ChangeList(val changes: List<Change>) : ChangesMessage()
   }
 }
+
+
+
+
 
 /**
  * Health Connect requires that the underlying Health Connect APK is installed on the device.
