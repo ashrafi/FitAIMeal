@@ -1,7 +1,7 @@
-package com.ylabz.aifitmeal.ui
+package com.ylabz.aifitmeal.ui.component
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.location.Location
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,10 +54,8 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 @Composable
 fun TwoTextAreasTabs(
     geminiText: List<String>,
-    image: String,
-    speechText: String,
-    location: Location?,
-    textFieldValue: String,
+    bitmap: MutableState<Bitmap?>,
+    caloriesText: String  = 500.toString(),
     onEvent: (MLEvent) -> Unit,
     errorMessage: String,
     showError: Boolean = false,
@@ -64,7 +63,7 @@ fun TwoTextAreasTabs(
     isLoading: Boolean = false // Add this parameter
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabNames = listOf("How", "Parts", "Steps", "Local")
+    val tabNames = listOf("recipe", "nutrition")
 
     Column(
         modifier = Modifier
@@ -132,49 +131,23 @@ fun TwoTextAreasTabs(
             when (selectedTabIndex) {
                 0 -> PromptSection(
                     selectedTabIndex,
-                    image,
+                    bitmap,
                     geminiText.getOrNull(selectedTabIndex) ?: "",
-                    " 🔧   Fix It  ⚒️ ",
-                    "How to  ",
+                    "   🍛   🥙   Recipe   🥗   🍱  ",
+                    " use the provided image and to the best of your ability create a recipe for a meal around $caloriesText calories.",
                     onEvent,
-                    textFieldValue,
-                    speechText,
+                    caloriesText,
                     onErrorDismiss
                 )
 
                 1 -> PromptSection(
                     selectedTabIndex,
-                    image,
+                    bitmap,
                     geminiText.getOrNull(selectedTabIndex) ?: "",
-                    " ✅   Parts   🧰 ",
-                    "What are the parts with price and budget to  ",
+                    "   💪   🫀   Nutrition   🫁   🧠 ",
+                    "What is the nutritional value of the provided recipe?  ",
                     onEvent,
-                    textFieldValue,
-                    speechText,
-                    onErrorDismiss
-                )
-
-                2 -> PromptSection(
-                    selectedTabIndex,
-                    image,
-                    geminiText.getOrNull(selectedTabIndex) ?: "",
-                    " 🏗️   Steps   📝 ",
-                    "What are the steps to  ",
-                    onEvent,
-                    textFieldValue,
-                    speechText,
-                    onErrorDismiss
-                )
-
-                3 -> PromptSection(
-                    selectedTabIndex,
-                    image,
-                    geminiText.getOrNull(selectedTabIndex) ?: "",
-                    " 🗺️   Local    📍 ",
-                    "What is a local business around GPS location ${location.toString()} to ",
-                    onEvent,
-                    textFieldValue,
-                    speechText,
+                    caloriesText,
                     onErrorDismiss
                 )
             }
@@ -187,13 +160,12 @@ fun TwoTextAreasTabs(
 @Composable
 fun PromptSection(
     index: Int,
-    images: String,
+    bitmap: MutableState<Bitmap?>,
     ansText: String,
     buttonText: String,
     initialPrompt: String,
     onEvent: (MLEvent) -> Unit,
-    noteText: String,
-    speechText: String,
+    calariesText: String,
     onErrorDismiss: () -> Unit
 ) {
     var isPromptVisible by rememberSaveable { mutableStateOf(false) }
@@ -207,9 +179,9 @@ fun PromptSection(
         isLoading = false
     }
 
-    LaunchedEffect(initialPrompt, speechText, noteText) {
+    LaunchedEffect(initialPrompt) {
         prompt =
-            "Please explain $initialPrompt $speechText. Notes:$noteText. Thank you for your help!"
+            "Please $initialPrompt Thank you for your help!"
     }
 
     Column {
@@ -220,18 +192,15 @@ fun PromptSection(
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (images.isNotEmpty()) {
-                    val bitmap = BitmapFactory.decodeFile(images)
-                    if (bitmap != null) {
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Image Preview",
-                            modifier = Modifier
-                                .size(43.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.background)
-                        )
-                    }
+                if (bitmap.value != null) {
+                    Image(
+                        bitmap = bitmap.value!!.asImageBitmap(),
+                        contentDescription = "Image Preview",
+                        modifier = Modifier
+                            .size(43.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.background)
+                    )
                 }
 
                 Spacer(modifier = Modifier.weight(0.1f))
@@ -265,11 +234,8 @@ fun PromptSection(
                 onClick = {
                     isLoading = true
                     try {
-                        if (images.isNotEmpty()) {
-                            val bitmap = BitmapFactory.decodeFile(images)
-                            onEvent(MLEvent.GenAiPromptResponseImg(prompt, bitmap, index))
-                            //GenAiChatResponseImg
-                            //onEvent(MLEvent.GenAiPromptResponseImg(promptState.value, bitmap, index))
+                        if (bitmap.value != null) {
+                            onEvent(MLEvent.GenAiPromptResponseImg(prompt, bitmap.value!!, index))
                         }
                     } catch (e: Exception) {
                         onErrorDismiss()
@@ -292,20 +258,12 @@ fun PromptSection(
                         .padding(horizontal = 8.dp)
                         .align(Alignment.CenterHorizontally),
                     color = Color(0xFF388E3C),
-                    strokeWidth = 9.dp // Adjust the stroke width as needed
+                    strokeWidth = 7.dp // Adjust the stroke width as needed
                 )
             }
             MarkdownText(
                 modifier = Modifier.padding(8.dp),
                 markdown = ansText,
-                //maxLines = 3,
-                //fontResource = R.font.montserrat_medium,
-                /*style = TextStyle(
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    lineHeight = 18.sp,
-                    textAlign = TextAlign.Justify,
-                ),*/
             )
         }
     }
@@ -327,11 +285,9 @@ fun PromptSection(
 @Composable
 fun PreviewFourTextAreasTabs() {
     TwoTextAreasTabs(
-        geminiText = listOf("How text", "Parts text", "Steps text", "Local text"),
-        image = "imagePath",
-        speechText = "speechText",
-        location = Location(""),
-        textFieldValue = "textFieldValue",
+        geminiText = listOf("Recipe text", "Nutrition text"),
+        bitmap = mutableStateOf(Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888)),
+        caloriesText = "textFieldValue",
         onEvent = {},
         errorMessage = "Error occurred",
         showError = true,

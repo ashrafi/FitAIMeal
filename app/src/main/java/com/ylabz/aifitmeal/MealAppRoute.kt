@@ -12,17 +12,20 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ylabz.aifitmeal.data.HealthConnectManager
-import com.ylabz.aifitmeal.ui.TwoTextAreasTabs
+import com.ylabz.aifitmeal.ui.component.TwoTextAreasTabs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
@@ -120,8 +123,9 @@ internal fun MLContent(
     loading: Boolean = false,
     calorieData: StateFlow<Double>? = null // Add optional parameter for calorieData
 ) {
+    val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     Column(modifier = modifier) {
-        AIFitMealApp(healthConnectManager = healthConnectManager)
+        AIFitMealApp(healthConnectManager = healthConnectManager, bitmap = bitmap)
 
         // Use the calorieData if it's not null
         calorieData?.collectAsState(initial = 0.0)?.value?.let { calories ->
@@ -133,11 +137,9 @@ internal fun MLContent(
         }
 
         TwoTextAreasTabs(
-            geminiText = listOf("How text", "Parts text", "Steps text", "Local text"),
-            image = "imagePath",
-            speechText = "speechText",
-            location = location,
-            textFieldValue = "textFieldValue",
+            geminiText = listOf("Recipe text", "Nutrition text"),
+            bitmap = bitmap,
+            caloriesText = 500.toString(),
             onEvent = onEvent,
             errorMessage = error ?: "",
             showError = error != null,

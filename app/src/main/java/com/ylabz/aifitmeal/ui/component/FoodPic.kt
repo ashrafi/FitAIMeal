@@ -1,6 +1,7 @@
-package com.ylabz.aifitmeal.ui
+package com.ylabz.aifitmeal.ui.component
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -31,7 +32,8 @@ import androidx.compose.ui.unit.dp
 fun FoodPic(bitmap: MutableState<Bitmap?>) {
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { capturedBitmap ->
         if (capturedBitmap != null) {
-            bitmap.value = capturedBitmap
+            val rotatedBitmap = rotateBitmap(capturedBitmap, 90)
+            bitmap.value = rotatedBitmap
         }
     }
 
@@ -64,7 +66,7 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        bitmap = bitmap.value!!.asImageBitmap(),
+                        bitmap = bitmap.value!!.asImageBitmap(),// bitmap.value!!.asImageBitmap(),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -85,3 +87,7 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
     }
 }
 
+private fun rotateBitmap(bitmap: Bitmap, degrees: Int): Bitmap {
+    val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}

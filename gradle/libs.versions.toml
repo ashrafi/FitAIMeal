@@ -15,6 +15,7 @@ googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 healthConnect = "1.0.0-alpha11"
 #healthConnect = "1.1.0-alpha07"
 accompanistVersion = "0.33.1-alpha"
+exifinterface = "1.3.7"
 
 materialIcons = "1.6.8"
 composeMarkdown = "0.5.2"
@@ -45,6 +46,9 @@ androidx-compose-material-icons-extended = { module = "androidx.compose.material
 compose-markdown = {  module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown"}
 
 androidx-health-connect = { module = "androidx.health.connect:connect-client" , version.ref = "healthConnect"}
+
+#// camera rotation
+androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
 
 #// ACCOMPANIST ////
 androidx-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistVersion" }
