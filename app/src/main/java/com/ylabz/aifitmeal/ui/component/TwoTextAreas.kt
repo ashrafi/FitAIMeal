@@ -145,7 +145,7 @@ fun TwoTextAreasTabs(
                     bitmap,
                     geminiText.getOrNull(selectedTabIndex) ?: "",
                     "   💪   🫀   Nutrition   🫁   🧠 ",
-                    "What is the nutritional value of the provided recipe?  ",
+                    "What is the nutritional information of your provided recipe?  ",
                     onEvent,
                     caloriesText,
                     onErrorDismiss
