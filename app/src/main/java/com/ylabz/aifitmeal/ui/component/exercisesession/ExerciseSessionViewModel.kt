@@ -75,7 +75,7 @@ class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectMa
   fun getTotalCaloriesBurnedToday(){
     viewModelScope.launch {
       tryWithPermissionsCheck {
-        val calories = healthConnectManager.getTotalCaloriesBurnedToday() ?: "bad"
+        val calories = healthConnectManager.getTotalCaloriesBurnedByTime() ?: "bad"
         Log.d("ExerciseSessionViewModel", "calories IN VIEW ODEL: $calories")
         _totalCalories.value = calories
       }
