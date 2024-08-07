@@ -42,13 +42,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.text.DecimalFormat
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.floor
 import kotlin.random.Random
 
 // The minimum android level that can use Health Connect
@@ -320,91 +320,59 @@ class HealthConnectManager(private val context: Context) {
         return healthConnectClient.readRecords(request).records
     }
 
-    //TODO: Get calories burned today
-    suspend fun getTotalCaloriesBurnedByTimeNO(): String? {
-        val date = LocalDate.now()
-        val laZoneId = ZoneId.of("America/Los_Angeles")
-        val startTime = date.atStartOfDay(laZoneId).toInstant()
-        val endTime = date.plusDays(1).atStartOfDay(laZoneId).toInstant()
-
-        val requestold = AggregateRequest(
-            metrics = setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL),
-            timeRangeFilter = TimeRangeFilter.between(startTime, endTime)
-        )
-
-        try {
-            val response = healthConnectClient.aggregate(
-                AggregateRequest(
-                    metrics = setOf(StepsRecord.COUNT_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(startTime, endTime)
-                )
-            )
-            // The result may be null if no data is available in the time range
-            val stepCount = response[StepsRecord.COUNT_TOTAL]
-            Log.d("HealthConnectManager", "Step count: $stepCount")
-        } catch (e: Exception) {
-            Log.d("HealthConnectManager", "Step count: ${e.message}")
-        }
-        //return (response[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inCalories?.div(4.184)).toString()
-        return "non" // getTotalCaloriesBurnedByTimeOrig()
-    }
-
     suspend fun getTotalCaloriesBurnedByTime(): String? = withContext(Dispatchers.IO) {
         try {
-            val timeZone = ZoneOffset.systemDefault()
-            val now = LocalDate.now()
+            val systemZoneId = ZoneId.systemDefault() // Use system default time zone
+            val now = LocalDate.now(systemZoneId)
 
-            // The timestamp marks the very start of August 4, 2024 -- midnight at the start of August 4, 2024
-            val todayStart = now.atStartOfDay(timeZone)
-
-            // Get the start of yesterday
+            // The timestamp marks the very start of the current day in the system default time zone
+            val todayStart = now.atStartOfDay(systemZoneId)
             val startYesterday = todayStart.minusDays(1)
 
-            // Define a very short time range of 1 second within the day for demonstration
-            val oneSecondRange = todayStart.plusSeconds(1).toInstant()
-
-            // TimeRangeFilter for the specific second
-            val timeRangeFilterNow = TimeRangeFilter.between(
-                todayStart.toInstant(),
-                oneSecondRange
+            // Query for the last 24 hours in the system default time zone
+            val timeRangeFilter = TimeRangeFilter.between(
+                startYesterday.toInstant(),
+                todayStart.toInstant()
             )
 
-            val aggregateDataTypes = setOf(
-                TotalCaloriesBurnedRecord.ENERGY_TOTAL,
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(systemZoneId)
+            Log.d("HealthConnectManager", "yesterday (System Default): ${startYesterday.format(formatter)}")
+            Log.d("HealthConnectManager", "todayStart (System Default): ${todayStart.format(formatter)}")
+            Log.d("HealthConnectManager", "Time Zone: System Default")
+
+            val readRequest = ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = timeRangeFilter
             )
 
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            Log.d("HealthConnectManager", "yesterday: ${startYesterday.format(formatter)}")
-            Log.d("HealthConnectManager", "todayStart: ${todayStart.format(formatter)}")
-            Log.d("HealthConnectManager", "Time Zone: $timeZone")
+            val readResponse = healthConnectClient.readRecords(readRequest)
+            var totalCalories = 0.0
 
-            val request = AggregateRequest(
-                metrics = setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL),
-                timeRangeFilter = timeRangeFilterNow
-            )
+            for (record in readResponse.records) {
+                val dataOrigin = record.metadata.dataOrigin?.packageName ?: "Unknown source"
+                val startTime = record.startTime.atZone(systemZoneId).format(formatter)
+                val endTime = record.endTime.atZone(systemZoneId).format(formatter)
+                val adjustedCalories = record.energy.inCalories / 1000.0 // Divide calories by 1,000
 
-            val response = healthConnectClient.aggregate(request)
-            // Assuming `response` is a Map or similar collection
-            for (dataOrigin in response.dataOrigins) {
-                Log.d("HealthConnectManager", "dataOrigin: ${dataOrigin.packageName}")
+                Log.d("HealthConnectManager", "Record: start time = $startTime, end time = $endTime, calories (adjusted) = $adjustedCalories, data origin = $dataOrigin")
+
+                totalCalories += adjustedCalories
             }
-            Log.d(
-                "HealthConnectManager",
-                "response contains TotalCaloriesBurnedRecord.ENERGY_TOTAL: ${
-                    response.contains(TotalCaloriesBurnedRecord.ENERGY_TOTAL)
-                }"
-            )
 
-            val totalCalories =
-                response[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inCalories?.toString() ?: "0"
-            Log.d("HealthConnectManager", "response in calories: $totalCalories")
+            val totalSeconds = 24 * 60 * 60 // Total seconds in a day
+            val averageCaloriesPerSecond = totalCalories / totalSeconds
 
-            totalCalories
+            Log.d("HealthConnectManager", "Total calories in the last 24 hours (adjusted): $totalCalories")
+            Log.d("HealthConnectManager", "Average calories per second (adjusted): $averageCaloriesPerSecond")
+
+            Math.round(totalCalories).toString()
         } catch (e: Exception) {
             Log.e("HealthConnectManager", "Error fetching calories data", e)
             null
         }
     }
+
+
 
 
     private fun isSupported() = Build.VERSION.SDK_INT >= MIN_SUPPORTED_SDK

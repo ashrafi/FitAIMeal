@@ -23,7 +23,7 @@ sealed interface MealAppUiState {
      */
     data class Success(
         var geminiResponses: List<String> = listOf("", ""),
-        var currLocation : Location? = null
+        var calorieData : Double? = null
     ) : MealAppUiState {
         var responses by mutableStateOf(geminiResponses)
     }
@@ -33,6 +33,6 @@ sealed interface MealAppUiState {
      */
     data class Error(
         val errorMessage: String,
-        var currLocation : Location? = null
+        var calorieData : Double? = null
     ) : MealAppUiState
 }

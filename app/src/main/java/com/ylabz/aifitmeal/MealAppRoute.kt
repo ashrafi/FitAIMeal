@@ -3,7 +3,6 @@ package com.ylabz.aifitmeal
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.location.Location
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
@@ -13,35 +12,42 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ylabz.aifitmeal.data.HealthConnectManager
 import com.ylabz.aifitmeal.ui.component.TwoTextAreasTabs
+import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import java.io.FileOutputStream
 
 @Composable
 fun MealAppRoute(
-    fixMeViewModel: MealAppViewModel = viewModel(),
-    healthConnectManager: HealthConnectManager
+    mealAppViewModel: MealAppViewModel = viewModel(),
+    healthConnectManager: HealthConnectManager,
+    bitmap: Bitmap?,
+    calorieData: String? = null
 ) {
-    val onEvent = fixMeViewModel::onEvent
-    val mlState by fixMeViewModel.mealAppUiState.collectAsStateWithLifecycle()
 
+
+
+    val onEvent = mealAppViewModel::onEvent
+    val mlState by mealAppViewModel.mealAppUiState.collectAsStateWithLifecycle()
     MLScreen(
         onEvent = onEvent,
-        fixMeUiState = mlState,
+        mealUiState = mlState,
+        bitmap = bitmap,
+        calorieData = calorieData,
         healthConnectManager = healthConnectManager
     )
 }
@@ -52,16 +58,19 @@ fun MealAppRoute(
 internal fun MLScreen(
     modifier: Modifier = Modifier,
     onEvent: (MLEvent) -> Unit,
-    fixMeUiState: MealAppUiState,
+    mealUiState: MealAppUiState,
+    bitmap: Bitmap?,
+    calorieData: String?,
     healthConnectManager: HealthConnectManager
 ) {
-    when (fixMeUiState) {
+    when (mealUiState) {
         is MealAppUiState.Loading -> {
             MLContent(
                 modifier = modifier,
                 onEvent = onEvent,
                 result = emptyList(),
-                location = null,
+                bitmap = bitmap,
+                calorieData = null,
                 healthConnectManager = healthConnectManager,
                 error = null,
                 loading = true
@@ -72,8 +81,9 @@ internal fun MLScreen(
             MLContent(
                 modifier = modifier,
                 onEvent = onEvent,
-                result = fixMeUiState.geminiResponses,
-                location = fixMeUiState.currLocation,
+                result = mealUiState.geminiResponses,
+                bitmap = bitmap,
+                calorieData = calorieData,
                 healthConnectManager = healthConnectManager,
                 error = null
             )
@@ -84,9 +94,10 @@ internal fun MLScreen(
                 modifier = modifier,
                 onEvent = onEvent,
                 result = emptyList(),
-                location = null,
+                bitmap = bitmap,
+                calorieData = calorieData,
                 healthConnectManager = healthConnectManager,
-                error = fixMeUiState.errorMessage
+                error = mealUiState.errorMessage
             )
         }
     }
@@ -118,28 +129,17 @@ internal fun MLContent(
     onEvent: (MLEvent) -> Unit,
     healthConnectManager: HealthConnectManager,
     result: List<String>,
-    location: Location?,
+    bitmap : Bitmap?,
+    calorieData: String?,
     error: String?,
     loading: Boolean = false,
-    calorieData: StateFlow<Double>? = null // Add optional parameter for calorieData
 ) {
-    val bitmap = remember { mutableStateOf<Bitmap?>(null) }
     Column(modifier = modifier) {
-        AIFitMealApp(healthConnectManager = healthConnectManager, bitmap = bitmap)
-
-        // Use the calorieData if it's not null
-        calorieData?.collectAsState(initial = 0.0)?.value?.let { calories ->
-            Text(
-                text = "Total Calories: $calories",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
 
         TwoTextAreasTabs(
             geminiText = result,
             bitmap = bitmap,
-            caloriesText = 500.toString(),
+            caloriesText = calorieData.toString(),
             onEvent = onEvent,
             errorMessage = error ?: "",
             showError = error != null,
@@ -147,3 +147,26 @@ internal fun MLContent(
         )
     }
 }
+
+
+/*@OptIn(ExperimentalPermissionsApi::class, ExperimentalCoroutinesApi::class)
+@RequiresApi(Build.VERSION_CODES.S)
+@Preview(showBackground = true)
+@Composable
+fun PreviewMLContent() {
+    val healthConnectManager = HealthConnectManager(LocalContext.current)
+    val result = listOf("Result 1", "Result 2")
+    val error: String? = null
+    val loading = false
+    val calorieData = "250.0"
+
+    MLContent(
+        modifier = Modifier,
+        onEvent = { /* Mocked event handler */ },
+        healthConnectManager = healthConnectManager,
+        result = result,
+        error = error,
+        loading = loading,
+        calorieData = calorieData
+    )
+}*/

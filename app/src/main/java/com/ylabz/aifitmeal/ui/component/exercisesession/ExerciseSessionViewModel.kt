@@ -45,8 +45,9 @@ import java.util.UUID
 import kotlin.random.Random
 import kotlinx.coroutines.launch
 
-class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectManager) :
-  ViewModel() {
+class ExerciseSessionViewModel(
+  private val healthConnectManager: HealthConnectManager
+) : ViewModel() {
   val permissions = setOf(
     HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
   )
@@ -60,7 +61,7 @@ class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectMa
   val permissionsLauncher = healthConnectManager.requestPermissionsActivityContract()
 
 
-  private val _totalCalories = MutableStateFlow("none")
+  private var _totalCalories = MutableStateFlow("none")
   var totalCalories: StateFlow<String> = _totalCalories.asStateFlow()
 
 
@@ -75,9 +76,8 @@ class ExerciseSessionViewModel(private val healthConnectManager: HealthConnectMa
   fun getTotalCaloriesBurnedToday(){
     viewModelScope.launch {
       tryWithPermissionsCheck {
-        val calories = healthConnectManager.getTotalCaloriesBurnedByTime() ?: "bad"
-        Log.d("ExerciseSessionViewModel", "calories IN VIEW ODEL: $calories")
-        _totalCalories.value = calories
+        _totalCalories.value = healthConnectManager.getTotalCaloriesBurnedByTime() ?: "bad"
+        Log.d("ExerciseSessionViewModel", "calories IN VIEW ODEL: ${totalCalories.value}")
       }
     }
   }

@@ -54,7 +54,7 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 @Composable
 fun TwoTextAreasTabs(
     geminiText: List<String>,
-    bitmap: MutableState<Bitmap?>,
+    bitmap: Bitmap?,
     caloriesText: String  = 500.toString(),
     onEvent: (MLEvent) -> Unit,
     errorMessage: String,
@@ -134,9 +134,9 @@ fun TwoTextAreasTabs(
                     bitmap,
                     geminiText.getOrNull(selectedTabIndex) ?: "",
                     "   🍛   🥙   Recipe   🥗   🍱  ",
-                    " use the provided image and to the best of your ability create a recipe for a meal around $caloriesText calories.",
+                    "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. " +
+                            "It's OK if not exact but just your best guess.",
                     onEvent,
-                    caloriesText,
                     onErrorDismiss
                 )
 
@@ -145,9 +145,8 @@ fun TwoTextAreasTabs(
                     bitmap,
                     geminiText.getOrNull(selectedTabIndex) ?: "",
                     "   💪   🫀   Nutrition   🫁   🧠 ",
-                    "What is the nutritional information of your provided recipe?  ",
+                    "You just provided a recipe with all the ingredients. What is the nutritional information of dinner recipe you just provided?  ",
                     onEvent,
-                    caloriesText,
                     onErrorDismiss
                 )
             }
@@ -160,12 +159,11 @@ fun TwoTextAreasTabs(
 @Composable
 fun PromptSection(
     index: Int,
-    bitmap: MutableState<Bitmap?>,
+    bitmap: Bitmap?,
     ansText: String,
     buttonText: String,
     initialPrompt: String,
     onEvent: (MLEvent) -> Unit,
-    calariesText: String,
     onErrorDismiss: () -> Unit
 ) {
     var isPromptVisible by rememberSaveable { mutableStateOf(false) }
@@ -181,7 +179,7 @@ fun PromptSection(
 
     LaunchedEffect(initialPrompt) {
         prompt =
-            "Please $initialPrompt Thank you for your help!"
+            "$initialPrompt Thank you for your help!"
     }
 
     Column {
@@ -192,9 +190,9 @@ fun PromptSection(
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (bitmap.value != null) {
+                if (bitmap != null) {
                     Image(
-                        bitmap = bitmap.value!!.asImageBitmap(),
+                        bitmap = bitmap!!.asImageBitmap(),
                         contentDescription = "Image Preview",
                         modifier = Modifier
                             .size(43.dp)
@@ -234,8 +232,8 @@ fun PromptSection(
                 onClick = {
                     isLoading = true
                     try {
-                        if (bitmap.value != null) {
-                            onEvent(MLEvent.GenAiChatResponseImg(prompt, bitmap.value!!, index))
+                        if (bitmap != null) {
+                            onEvent(MLEvent.GenAiChatResponseImg(prompt, bitmap, index))
                         }
                     } catch (e: Exception) {
                         onErrorDismiss()
@@ -286,7 +284,7 @@ fun PromptSection(
 fun PreviewFourTextAreasTabs() {
     TwoTextAreasTabs(
         geminiText = listOf("Recipe text", "Nutrition text"),
-        bitmap = remember { mutableStateOf(Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888))},
+        bitmap = Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888),
         caloriesText = "textFieldValue",
         onEvent = {},
         errorMessage = "Error occurred",

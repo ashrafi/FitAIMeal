@@ -31,10 +31,6 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
     val mealAppUiState: StateFlow<MealAppUiState> = _mealAppUiState.asStateFlow()
 
 
-
-
-    var currentLocation by mutableStateOf<Location?>(null)
-
     /*
     private val _MealApp_uiState: MutableStateFlow<MealAppUiState> =
         MutableStateFlow(MealAppUiState.Success())
@@ -84,6 +80,14 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
             is MLEvent.GenAiPromptResponseImg -> {
                 sendPromptWithImage(event.prompt, event.index, event.image)
                 Log.d("MealApp", "Called with image")
+            }
+
+            is MLEvent.StartNewChat -> {
+                chat = generativeModelChat.startChat(
+                    history = listOf(
+                        content(role = "user") { text("Hello,Thank you for your help.") },
+                    )
+                )
             }
 
             is MLEvent.GenAiChatResponseImg -> {

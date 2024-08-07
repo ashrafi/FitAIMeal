@@ -2,6 +2,10 @@ package com.ylabz.aifitmeal.ui.component
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -28,14 +32,20 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.res.ResourcesCompat
+import com.ylabz.aifitmeal.R
 
 @Composable
 fun FoodPic(bitmap: MutableState<Bitmap?>) {
+
     // State to manage image visibility
     var isImageVisible by remember { mutableStateOf(true) }
 
@@ -118,4 +128,29 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
 private fun rotateBitmap(bitmap: Bitmap, degrees: Int): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
     return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}
+
+// Helper function to create a sample bitmap for preview
+private fun createSampleBitmap(): Bitmap {
+    val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint().apply {
+        color = Color.RED
+        style = Paint.Style.FILL
+    }
+    canvas.drawRect(0f, 0f, 100f, 100f, paint)
+    return bitmap
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewFoodPic() {
+    // Load the drawable resource
+    val context = LocalContext.current
+    val drawable = ResourcesCompat.getDrawable(context.resources, R.drawable.food, null) as BitmapDrawable
+    val bitmap = drawable.bitmap
+
+    val bitmapState = remember { mutableStateOf<Bitmap?>(bitmap) }
+
+    FoodPic(bitmap = bitmapState)
 }

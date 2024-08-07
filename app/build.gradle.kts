@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.compose.markdown)
     implementation(libs.androidx.lifecycle.runtime.compose.android)
 
+    implementation(libs.kotlinx.datetime)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

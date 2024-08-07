@@ -21,6 +21,9 @@ materialIcons = "1.6.8"
 composeMarkdown = "0.5.2"
 lifecycleRuntimeComposeAndroidVersion = "2.8.4"
 
+kotlinx-datetime-version = "0.4.0"  # Make sure to use the latest version
+
+
 
 
 [libraries]
@@ -46,6 +49,9 @@ androidx-compose-material-icons-extended = { module = "androidx.compose.material
 compose-markdown = {  module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown"}
 
 androidx-health-connect = { module = "androidx.health.connect:connect-client" , version.ref = "healthConnect"}
+
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime-version" }
+
 
 #// camera rotation
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }

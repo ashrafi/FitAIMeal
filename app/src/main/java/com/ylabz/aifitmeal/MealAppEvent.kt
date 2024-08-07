@@ -7,5 +7,7 @@ sealed class MLEvent {
     data class GenAiPromptResponseImg(val prompt: String, val image: Bitmap, val index: Int) : MLEvent()
     data class GenAiChatResponseImg(val prompt: String, val image: Bitmap, val index: Int) : MLEvent()
     data class GenAiChatResponseTxt(val prompt: String, val index: Int) : MLEvent()
+    object StartNewChat : MLEvent()
+
 }
 
