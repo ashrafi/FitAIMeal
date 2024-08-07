@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
                     val context = LocalContext.current
                     val drawable = ResourcesCompat.getDrawable(context.resources, R.drawable.food, null) as BitmapDrawable
                     val bitmap = rememberSaveable { mutableStateOf<Bitmap?>(null) }
+                    //bitmap.value = drawable.bitmap.asShared()
                     val calories = rememberSaveable { mutableStateOf<String?>(null) }
                     Column {
                         AIFitMealApp(
