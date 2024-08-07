@@ -320,7 +320,251 @@ class HealthConnectManager(private val context: Context) {
         return healthConnectClient.readRecords(request).records
     }
 
-    suspend fun getTotalCaloriesBurnedByTime(): String? = withContext(Dispatchers.IO) {
+
+
+    suspend fun getTotalCaloriesBurnedDebug(): String? = withContext(Dispatchers.IO) {
+        try {
+            val systemZoneId = ZoneId.systemDefault()
+            val now = ZonedDateTime.now(systemZoneId)
+
+            // Start of the current day
+            val todayStart = now.toLocalDate().atStartOfDay(systemZoneId)
+
+            // Query for the time range from the start of today to now
+            val timeRangeFilter = TimeRangeFilter.between(
+                todayStart.toInstant(),
+                now.toInstant()
+            )
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(systemZoneId)
+            Log.d("HealthConnectManager", "todayStart (System Default): ${todayStart.format(formatter)}")
+            Log.d("HealthConnectManager", "now (System Default): ${now.format(formatter)}")
+            Log.d("HealthConnectManager", "Time Zone: System Default")
+
+            // Read ExerciseSessionRecords
+            val exerciseReadRequest = ReadRecordsRequest(
+                recordType = ExerciseSessionRecord::class,
+                timeRangeFilter = timeRangeFilter
+            )
+
+            val exerciseReadResponse = healthConnectClient.readRecords(exerciseReadRequest)
+
+            // Read TotalCaloriesBurnedRecords
+            val caloriesReadRequest = ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = timeRangeFilter
+            )
+
+            val caloriesReadResponse = healthConnectClient.readRecords(caloriesReadRequest)
+            var totalCalories = 0.0
+
+            val walkingSessions = exerciseReadResponse.records.filter {
+                it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_WALKING
+            }
+
+            for (record in caloriesReadResponse.records) {
+                // Check if the calories burned record overlaps with any walking session
+                val isDuringWalking = walkingSessions.any { session ->
+                    (record.startTime in session.startTime..session.endTime) ||
+                            (record.endTime in session.startTime..session.endTime) ||
+                            (record.startTime <= session.startTime && record.endTime >= session.endTime)
+                }
+
+                if (isDuringWalking) {
+                    val dataOrigin = record.metadata.dataOrigin?.packageName ?: "Unknown source"
+                    val startTime = record.startTime.atZone(systemZoneId).format(formatter)
+                    val endTime = record.endTime.atZone(systemZoneId).format(formatter)
+                    val adjustedCalories = record.energy.inCalories / 1000.0 // Adjust calories
+
+                    Log.d("HealthConnectManager", "Included Record: start time = $startTime, end time = $endTime, calories (adjusted) = $adjustedCalories, data origin = $dataOrigin")
+
+                    totalCalories += adjustedCalories
+                } else {
+                    Log.d("HealthConnectManager", "Excluded Record: start time = ${record.startTime.atZone(systemZoneId).format(formatter)}, end time = ${record.endTime.atZone(systemZoneId).format(formatter)}, calories (adjusted) = ${record.energy.inCalories / 1000.0}")
+                }
+            }
+
+            Log.d("HealthConnectManager", "Total calories from today start to now (adjusted): $totalCalories")
+
+            Math.round(totalCalories).toString()
+        } catch (e: Exception) {
+            Log.e("HealthConnectManager", "Error fetching calories data", e)
+            null
+        }
+    }
+
+
+
+    suspend fun getTotalCaloriesBurnedByWalking(): String? = withContext(Dispatchers.IO) {
+        try {
+            val systemZoneId = ZoneId.systemDefault()
+            val now = ZonedDateTime.now(systemZoneId)
+
+            // The timestamp marks the very start of the current day in the system default time zone
+            val todayStart = now.toLocalDate().atStartOfDay(systemZoneId)
+
+            // Query for the time range from the start of today to now
+            val timeRangeFilter = TimeRangeFilter.between(
+                todayStart.toInstant(),
+                now.toInstant()
+            )
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(systemZoneId)
+            Log.d("HealthConnectManager", "todayStart (System Default): ${todayStart.format(formatter)}")
+            Log.d("HealthConnectManager", "now (System Default): ${now.format(formatter)}")
+            Log.d("HealthConnectManager", "Time Zone: System Default")
+
+            // Read ExerciseSessionRecords
+            val exerciseReadRequest = ReadRecordsRequest(
+                recordType = ExerciseSessionRecord::class,
+                timeRangeFilter = timeRangeFilter
+            )
+
+            val exerciseReadResponse = healthConnectClient.readRecords(exerciseReadRequest)
+
+            // Filter for walking sessions and get start and end times
+            val walkingSessions = exerciseReadResponse.records.filter {
+                it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_WALKING
+            }.map {
+                it.startTime..it.endTime
+            }
+
+            // Read TotalCaloriesBurnedRecords
+            val caloriesReadRequest = ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = timeRangeFilter
+            )
+
+            val caloriesReadResponse = healthConnectClient.readRecords(caloriesReadRequest)
+            var totalCalories = 0.0
+
+            for (record in caloriesReadResponse.records) {
+                // Check if the calories burned record overlaps with any walking session
+                val isDuringWalking = walkingSessions.any { range ->
+                    record.startTime in range || record.endTime in range
+                }
+
+                if (isDuringWalking) {
+                    val dataOrigin = record.metadata.dataOrigin?.packageName ?: "Unknown source"
+                    val startTime = record.startTime.atZone(systemZoneId).format(formatter)
+                    val endTime = record.endTime.atZone(systemZoneId).format(formatter)
+                    val adjustedCalories = record.energy.inCalories / 1000.0 // Adjust calories
+
+                    Log.d("HealthConnectManager", "Record: start time = $startTime, end time = $endTime, calories (adjusted) = $adjustedCalories, data origin = $dataOrigin")
+
+                    totalCalories += adjustedCalories
+                }
+            }
+
+            Log.d("HealthConnectManager", "Total calories in the last 24 hours (adjusted): $totalCalories")
+
+            Math.round(totalCalories).toString()
+        } catch (e: Exception) {
+            Log.e("HealthConnectManager", "Error fetching calories data", e)
+            null
+        }
+    }
+
+
+
+
+    suspend fun getTotalCaloriesBurned24hours(): String? = withContext(Dispatchers.IO) {
+        try {
+            val systemZoneId = ZoneId.systemDefault()
+            val now = ZonedDateTime.now(systemZoneId)
+
+            // Calculate the timestamp for 24 hours ago
+            val yesterday = now.minusHours(24)
+
+            // Query for the last 24 hours in the system default time zone
+            val timeRangeFilter = TimeRangeFilter.between(
+                yesterday.toInstant(),
+                now.toInstant()
+            )
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(systemZoneId)
+            Log.d("HealthConnectManager", "yesterday (System Default): ${yesterday.format(formatter)}")
+            Log.d("HealthConnectManager", "now (System Default): ${now.format(formatter)}")
+            Log.d("HealthConnectManager", "Time Zone: System Default")
+
+            val readRequest = ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = timeRangeFilter
+            )
+
+            val readResponse = healthConnectClient.readRecords(readRequest)
+            var totalCalories = 0.0
+
+            for (record in readResponse.records) {
+                val dataOrigin = record.metadata.dataOrigin?.packageName ?: "Unknown source"
+                val startTime = record.startTime.atZone(systemZoneId).format(formatter)
+                val endTime = record.endTime.atZone(systemZoneId).format(formatter)
+                val adjustedCalories = record.energy.inCalories / 1000.0 // Adjust calories
+
+                Log.d("HealthConnectManager", "Record: start time = $startTime, end time = $endTime, calories (adjusted) = $adjustedCalories, data origin = $dataOrigin")
+
+                totalCalories += adjustedCalories
+            }
+
+            Log.d("HealthConnectManager", "Total calories in the last 24 hours (adjusted): $totalCalories")
+
+            Math.round(totalCalories).toString()
+        } catch (e: Exception) {
+            Log.e("HealthConnectManager", "Error fetching calories data", e)
+            null
+        }
+    }
+
+
+    suspend fun getTotalCaloriesBurnedNow(): String? = withContext(Dispatchers.IO) {
+        try {
+            val systemZoneId = ZoneId.systemDefault()
+            val now = ZonedDateTime.now(systemZoneId)
+
+            // The timestamp marks the very start of the current day in the system default time zone
+            val todayStart = now.toLocalDate().atStartOfDay(systemZoneId)
+
+            // Query for the time range from the start of today to now
+            val timeRangeFilter = TimeRangeFilter.between(
+                todayStart.toInstant(),
+                now.toInstant()
+            )
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(systemZoneId)
+            Log.d("HealthConnectManager", "todayStart (System Default): ${todayStart.format(formatter)}")
+            Log.d("HealthConnectManager", "now (System Default): ${now.format(formatter)}")
+            Log.d("HealthConnectManager", "Time Zone: System Default")
+
+            val readRequest = ReadRecordsRequest(
+                recordType = TotalCaloriesBurnedRecord::class,
+                timeRangeFilter = timeRangeFilter
+            )
+
+            val readResponse = healthConnectClient.readRecords(readRequest)
+            var totalCalories = 0.0
+
+            for (record in readResponse.records) {
+                val dataOrigin = record.metadata.dataOrigin?.packageName ?: "Unknown source"
+                val startTime = record.startTime.atZone(systemZoneId).format(formatter)
+                val endTime = record.endTime.atZone(systemZoneId).format(formatter)
+                val adjustedCalories = record.energy.inCalories / 1000.0 // Adjust calories
+
+                Log.d("HealthConnectManager", "Record: start time = $startTime, end time = $endTime, calories (adjusted) = $adjustedCalories, data origin = $dataOrigin")
+
+                totalCalories += adjustedCalories
+            }
+
+            Log.d("HealthConnectManager", "Total calories from today start to now (adjusted): $totalCalories")
+
+            Math.round(totalCalories).toString()
+        } catch (e: Exception) {
+            Log.e("HealthConnectManager", "Error fetching calories data", e)
+            null
+        }
+    }
+
+
+    suspend fun getTotalCaloriesBurnedYesterday(): String? = withContext(Dispatchers.IO) {
         try {
             val systemZoneId = ZoneId.systemDefault() // Use system default time zone
             val now = LocalDate.now(systemZoneId)

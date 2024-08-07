@@ -49,7 +49,8 @@ class ExerciseSessionViewModel(
   private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
   val permissions = setOf(
-    HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
+    HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+    HealthPermission.getReadPermission(ExerciseSessionRecord::class),
   )
 
   var permissionsGranted = mutableStateOf(false)
@@ -76,7 +77,7 @@ class ExerciseSessionViewModel(
   fun getTotalCaloriesBurnedToday(){
     viewModelScope.launch {
       tryWithPermissionsCheck {
-        _totalCalories.value = healthConnectManager.getTotalCaloriesBurnedByTime() ?: "bad"
+        _totalCalories.value = healthConnectManager.getTotalCaloriesBurnedYesterday() ?: "bad"
         Log.d("ExerciseSessionViewModel", "calories IN VIEW ODEL: ${totalCalories.value}")
       }
     }
