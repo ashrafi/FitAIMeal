@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose.android)
 
     implementation(libs.kotlinx.datetime)
+    implementation(libs.androidx.exifinterface)
 
 
     testImplementation(libs.junit)

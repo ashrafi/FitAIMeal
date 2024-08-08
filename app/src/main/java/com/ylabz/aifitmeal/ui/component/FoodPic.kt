@@ -1,11 +1,12 @@
 package com.ylabz.aifitmeal.ui.component
 
+import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
+import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -26,16 +27,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.res.ResourcesCompat
+import androidx.exifinterface.media.ExifInterface
 import com.ylabz.aifitmeal.R
-import androidx.compose.ui.graphics.Color as ComposeColor
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun FoodPic(bitmap: MutableState<Bitmap?>) {
     var isImageVisible by remember { mutableStateOf(true) }
 
+    val context = LocalContext.current
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { capturedBitmap ->
         capturedBitmap?.let {
-            val rotatedBitmap = rotateBitmap(it, 90)
+            val rotatedBitmap = rotateBitmapIfRequired(context, it)
             bitmap.value = rotatedBitmap
             isImageVisible = true
         }
@@ -43,7 +47,7 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
@@ -75,7 +79,7 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(300.dp), // Adjust height as needed
+                            .height(300.dp),
                         elevation = CardDefaults.elevatedCardElevation(8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         shape = MaterialTheme.shapes.medium
@@ -117,9 +121,37 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
     }
 }
 
-private fun rotateBitmap(bitmap: Bitmap, degrees: Int): Bitmap {
-    val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
-    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+private fun rotateBitmapIfRequired(context: Context, bitmap: Bitmap): Bitmap {
+    val tempFile = createTempFile(context)
+    saveBitmapToFile(bitmap, tempFile)
+
+    val exif = ExifInterface(tempFile.absolutePath)
+    val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+    Log.d("FoodPic", "Orientation: $orientation")
+    val matrix = Matrix()
+    when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+    }
+
+    val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+    tempFile.delete() // Clean up the temporary file
+
+    return rotatedBitmap
+}
+
+private fun createTempFile(context: Context): File {
+    return File.createTempFile("temp_image", ".jpg", context.cacheDir).apply {
+        deleteOnExit()
+    }
+}
+
+private fun saveBitmapToFile(bitmap: Bitmap, file: File) {
+    FileOutputStream(file).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+    }
 }
 
 @Preview(showBackground = true)
