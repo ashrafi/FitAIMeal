@@ -38,15 +38,14 @@ class MainActivity : ComponentActivity() {
                     val calories = rememberSaveable { mutableStateOf<String?>(null) }
                     Column {
 
+                        // Get our image from the camera
+                        FoodPic(bitmap)//bitmap = bitmap)
+
                         // Get our calories from the Health Connect API
                         ExerciseData(
                             healthConnectManager = healthConnectManager,
                             calorieData = calories
                         )
-
-                        // Get our image from the camera
-                        FoodPic(bitmap)//bitmap = bitmap)
-
 
                         RecipesRoute(
                             healthConnectManager = healthConnectManager,

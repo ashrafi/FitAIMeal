@@ -49,10 +49,10 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            .padding(16.dp)//horizontal = 16.dp)
     ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Spacer(modifier = Modifier.height(16.dp))
 
         if (bitmap.value == null) {
             Button(
@@ -67,7 +67,7 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    //.padding(8.dp)
             ) {
                 if (isImageVisible) {
                     Card(

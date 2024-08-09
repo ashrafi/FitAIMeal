@@ -30,10 +30,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -77,86 +82,94 @@ fun ExerciseSessionScreen(
     }
 
     if (uiState != ExerciseSessionViewModel.UiState.Uninitialized) {
-        Column(
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .padding(8.dp) // Reduced padding
+                .padding(16.dp),  // Space around the card
+            elevation = CardDefaults.cardElevation(8.dp),  // Elevation for a raised effect
+            shape = RoundedCornerShape(12.dp)  // Rounded corners for a softer look
         ) {
-            if (!permissionsGranted) {
-                ElevatedButton(
-                    onClick = { onPermissionsLaunch(permissions) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp), // Reduced padding
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    ),
-                    contentPadding = PaddingValues(8.dp) // Reduced content padding
-                ) {
-                    Icon(
-                        Icons.Default.RestaurantMenu,
-                        contentDescription = "Request Permissions",
-                        tint = MaterialTheme.colorScheme.onSecondary,
-                        modifier = Modifier.size(18.dp) // Smaller icon
-                    )
-                    Spacer(modifier = Modifier.width(4.dp)) // Reduced spacing
-                    Text(
-                        text = "Request Permissions",
-                        style = MaterialTheme.typography.bodyMedium.copy( // Smaller text style
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondary
-                        )
-                    )
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp), // Reduced padding
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            Column(
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(12.dp)  // Padding inside the card
+            ) {
+                if (!permissionsGranted) {
                     ElevatedButton(
-                        onClick = { readCalories() },
+                        onClick = { onPermissionsLaunch(permissions) },
                         modifier = Modifier
-                            .height(40.dp) // Reduced button height
-                            .padding(end = 8.dp), // Reduced padding
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),  // Reduced padding inside the card
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary
                         ),
-                        contentPadding = PaddingValues(8.dp) // Reduced content padding
+                        contentPadding = PaddingValues(8.dp)  // Compact content padding
                     ) {
                         Icon(
-                            Icons.Default.LocalDining,
-                            contentDescription = "Check Calories",
+                            Icons.Default.HealthAndSafety,
+                            contentDescription = "Request Permissions",
                             tint = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier.size(18.dp) // Smaller icon
+                            modifier = Modifier.size(18.dp)  // Smaller icon
                         )
-                        Spacer(modifier = Modifier.width(4.dp)) // Reduced spacing
+                        Spacer(modifier = Modifier.width(4.dp))  // Reduced spacing
                         Text(
-                            text = "Check Calories",
-                            style = MaterialTheme.typography.bodyMedium.copy( // Smaller text style
+                            text = "Request Permissions",
+                            style = MaterialTheme.typography.bodyMedium.copy(  // Smaller text style
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondary
                             )
                         )
                     }
-                    Text(
-                        text = "Total Calories: ${calorieData.value}",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
+                } else {
+                    Row(
                         modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.tertiaryContainer,
-                                shape = RoundedCornerShape(8.dp)
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),  // Reduced padding inside the card
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ElevatedButton(
+                            onClick = { readCalories() },
+                            modifier = Modifier
+                                .height(40.dp)  // Reduced button height
+                                .padding(end = 8.dp),  // Reduced padding inside the card
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            ),
+                            contentPadding = PaddingValues(8.dp)  // Compact content padding
+                        ) {
+                            Icon(
+                                Icons.Default.LocalFireDepartment,
+                                contentDescription = "Check Calories",
+                                tint = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.size(18.dp)  // Smaller icon
                             )
-                            .padding(8.dp) // Reduced padding
-                    )
+                            Spacer(modifier = Modifier.width(4.dp))  // Reduced spacing
+                            Text(
+                                text = "Check Calories",
+                                style = MaterialTheme.typography.bodyMedium.copy(  // Smaller text style
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondary
+                                )
+                            )
+                        }
+                        Text(
+                            text = "Total Calories: ${calorieData.value}",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(8.dp)  // Reduced padding
+                        )
+                    }
                 }
             }
         }
