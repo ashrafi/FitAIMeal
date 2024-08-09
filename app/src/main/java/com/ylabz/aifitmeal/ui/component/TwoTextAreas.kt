@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.UnfoldLess
 import androidx.compose.material.icons.twotone.UnfoldMore
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -65,112 +67,119 @@ fun TwoTextAreasTabs(
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabNames = listOf("Recipe", "Nutrition")
-
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),  // Add padding around the card
+        elevation = CardDefaults.cardElevation(8.dp),  // Set elevation for the card
+        shape = RoundedCornerShape(12.dp)  // Use rounded corners for the card
     ) {
-        // Enhanced TabRow with Material 3 design
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                    color = MaterialTheme.colorScheme.primary,
-                    height = 4.dp // Adds a visual indicator below the selected tab
-                )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            tabNames.forEachIndexed { index, title ->
-                Tab(
-                    text = {
-                        Text(
-                            title,
-                            color = if (selectedTabIndex == index)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = if (selectedTabIndex == index)
-                                MaterialTheme.typography.titleMedium
-                            else
-                                MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-                )
-            }
-        }
-
-        // Error Snackbar
-        if (showError) {
-            Snackbar(
-                action = {
-                    TextButton(onClick = onErrorDismiss) {
-                        Text(
-                            text = "Dismiss",
-                            color = MaterialTheme.colorScheme.onError,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError,
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = errorMessage,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        // Loading Indicator
-        if (isLoading) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
-        }
-
-        // Content Section
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(16.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            when (selectedTabIndex) {
-                0 -> PromptSection(
-                    index = selectedTabIndex,
-                    bitmap = bitmap,
-                    ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
-                    buttonText = "   🍛   🥙   Recipe   🥗   🍱  ",
-                    initialPrompt = "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. It's OK if not exact but just your best guess.",
-                    onEvent = onEvent,
-                    onErrorDismiss = onErrorDismiss
-                )
+            // Enhanced TabRow with Material 3 design
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = MaterialTheme.colorScheme.primary,
+                        height = 4.dp // Adds a visual indicator below the selected tab
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                tabNames.forEachIndexed { index, title ->
+                    Tab(
+                        text = {
+                            Text(
+                                title,
+                                color = if (selectedTabIndex == index)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onPrimaryContainer,
+                                style = if (selectedTabIndex == index)
+                                    MaterialTheme.typography.titleMedium
+                                else
+                                    MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+                    )
+                }
+            }
 
-                1 -> PromptSection(
-                    index = selectedTabIndex,
-                    bitmap = bitmap,
-                    ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
-                    buttonText = "   💪   🫀   Nutrition   🫁   🧠 ",
-                    initialPrompt = "You just provided a recipe with all the ingredients. What is the nutritional information of dinner recipe you just provided?  ",
-                    onEvent = onEvent,
-                    onErrorDismiss = onErrorDismiss
+            // Error Snackbar
+            if (showError) {
+                Snackbar(
+                    action = {
+                        TextButton(onClick = onErrorDismiss) {
+                            Text(
+                                text = "Dismiss",
+                                color = MaterialTheme.colorScheme.onError,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = errorMessage,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Loading Indicator
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .align(Alignment.CenterHorizontally)
                 )
+            }
+
+            // Content Section
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(16.dp)
+            ) {
+                when (selectedTabIndex) {
+                    0 -> PromptSection(
+                        index = selectedTabIndex,
+                        bitmap = bitmap,
+                        ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
+                        buttonText = "   🍛   🥙   Recipe   🥗   🍱  ",
+                        initialPrompt = "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. It's OK if not exact but just your best guess.",
+                        onEvent = onEvent,
+                        onErrorDismiss = onErrorDismiss
+                    )
+
+                    1 -> PromptSection(
+                        index = selectedTabIndex,
+                        bitmap = bitmap,
+                        ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
+                        buttonText = "   💪   🫀   Nutrition   🫁   🧠 ",
+                        initialPrompt = "You just provided a recipe with all the ingredients. What is the nutritional information of dinner recipe you just provided?  ",
+                        onEvent = onEvent,
+                        onErrorDismiss = onErrorDismiss
+                    )
+                }
             }
         }
     }
