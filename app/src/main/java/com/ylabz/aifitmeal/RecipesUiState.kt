@@ -1,6 +1,5 @@
 package com.ylabz.aifitmeal
 
-import android.location.Location
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,14 +7,14 @@ import androidx.compose.runtime.setValue
 /**
  * A sealed hierarchy describing the state of the text generation.
  */
-sealed interface MealAppUiState {
+sealed interface RecipesUiState {
 
     /**
      * Still loading
      */
     data class Loading(
         var loading: Boolean = true,
-    ) : MealAppUiState
+    ) : RecipesUiState
 
 
     /**
@@ -24,7 +23,7 @@ sealed interface MealAppUiState {
     data class Success(
         var geminiResponses: List<String> = listOf("", ""),
         var calorieData : Double? = null
-    ) : MealAppUiState {
+    ) : RecipesUiState {
         var responses by mutableStateOf(geminiResponses)
     }
 
@@ -34,5 +33,5 @@ sealed interface MealAppUiState {
     data class Error(
         val errorMessage: String,
         var calorieData : Double? = null
-    ) : MealAppUiState
+    ) : RecipesUiState
 }

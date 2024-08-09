@@ -1,7 +1,6 @@
 package com.ylabz.aifitmeal.ui.component
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +30,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,7 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ylabz.aifitmeal.MLEvent
+import com.ylabz.aifitmeal.RecipesEvent
 import com.ylabz.aifitmeal.R
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
@@ -56,7 +54,7 @@ fun TwoTextAreasTabs(
     geminiText: List<String>,
     bitmap: Bitmap?,
     caloriesText: String  = 500.toString(),
-    onEvent: (MLEvent) -> Unit,
+    onEvent: (RecipesEvent) -> Unit,
     errorMessage: String,
     showError: Boolean = false,
     onErrorDismiss: () -> Unit,
@@ -163,7 +161,7 @@ fun PromptSection(
     ansText: String,
     buttonText: String,
     initialPrompt: String,
-    onEvent: (MLEvent) -> Unit,
+    onEvent: (RecipesEvent) -> Unit,
     onErrorDismiss: () -> Unit
 ) {
     var isPromptVisible by rememberSaveable { mutableStateOf(false) }
@@ -233,7 +231,7 @@ fun PromptSection(
                     isLoading = true
                     try {
                         if (bitmap != null) {
-                            onEvent(MLEvent.GenAiChatResponseImg(prompt, bitmap, index))
+                            onEvent(RecipesEvent.GenAiChatResponseImg(prompt, bitmap, index))
                         }
                     } catch (e: Exception) {
                         onErrorDismiss()

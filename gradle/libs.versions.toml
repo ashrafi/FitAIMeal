@@ -21,7 +21,8 @@ materialIcons = "1.6.8"
 composeMarkdown = "0.5.2"
 lifecycleRuntimeComposeAndroidVersion = "2.8.4"
 
-kotlinx-datetime-version = "0.4.0"  # Make sure to use the latest version
+kotlinx-datetime-version = "0.4.0"
+constraintlayoutVersion = "2.1.4"  # Make sure to use the latest version
 
 
 
@@ -59,6 +60,7 @@ androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", vers
 #// ACCOMPANIST ////
 androidx-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistVersion" }
 androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroidVersion" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayoutVersion" }
 
 
 [plugins]

@@ -2,11 +2,7 @@ package com.ylabz.aifitmeal
 
 import android.app.Application
 import android.graphics.Bitmap
-import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.Chat
@@ -22,19 +18,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-class MealAppViewModel(application: Application) : AndroidViewModel(application) {
+class RecipesViewModel(application: Application) : AndroidViewModel(application) {
     private val context = getApplication<Application>().applicationContext
     private val _calorieData = MutableStateFlow(0.0) // Replace with actual data type
     val calorieData: StateFlow<Double> = _calorieData
 
-    private val _mealAppUiState = MutableStateFlow<MealAppUiState>(MealAppUiState.Success())
-    val mealAppUiState: StateFlow<MealAppUiState> = _mealAppUiState.asStateFlow()
+    private val _recipesUiState = MutableStateFlow<RecipesUiState>(RecipesUiState.Success())
+    val recipesUiState: StateFlow<RecipesUiState> = _recipesUiState.asStateFlow()
 
 
     /*
-    private val _MealApp_uiState: MutableStateFlow<MealAppUiState> =
-        MutableStateFlow(MealAppUiState.Success())
-    val mealAppUiState: StateFlow<MealAppUiState> = _MealApp_uiState.asStateFlow()
+    private val _MealApp_uiState: MutableStateFlow<RecipesUiState> =
+        MutableStateFlow(RecipesUiState.Success())
+    val recipesUiState: StateFlow<RecipesUiState> = _MealApp_uiState.asStateFlow()
 
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash-latest",
@@ -75,14 +71,14 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
         )
     )
 
-    fun onEvent(event: MLEvent) {
+    fun onEvent(event: RecipesEvent) {
         when (event) {
-            is MLEvent.GenAiPromptResponseImg -> {
+            is RecipesEvent.GenAiPromptResponseImg -> {
                 sendPromptWithImage(event.prompt, event.index, event.image)
                 Log.d("MealApp", "Called with image")
             }
 
-            is MLEvent.StartNewChat -> {
+            is RecipesEvent.StartNewChat -> {
                 chat = generativeModelChat.startChat(
                     history = listOf(
                         content(role = "user") { text("Hello,Thank you for your help.") },
@@ -90,28 +86,28 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
                 )
             }
 
-            is MLEvent.GenAiChatResponseImg -> {
+            is RecipesEvent.GenAiChatResponseImg -> {
                 sendChatWithImage(event.prompt, event.index, event.image)
                 Log.d("MealApp", "Called Chat with image")
             }
 
-            is MLEvent.GenAiChatResponseTxt -> {
+            is RecipesEvent.GenAiChatResponseTxt -> {
                 continueChatWithoutImage(event.prompt, event.index)
                 Log.d("MealApp", "Called Chat without image")
             }
 
 
-            /*is MLEvent.SetMemo -> {
-                val old = MealAppUiState.Success().geminiResponses
+            /*is RecipesEvent.SetMemo -> {
+                val old = RecipesUiState.Success().geminiResponses
                 viewModelScope.launch {
-                    _MealApp_uiState.value = MealAppUiState.Success(
+                    _MealApp_uiState.value = RecipesUiState.Success(
                         geminiResponses = old,
                     )
                 }
             }*/
 
 
-            /*is MLEvent.StartCaptureSpeech2Txt -> {
+            /*is RecipesEvent.StartCaptureSpeech2Txt -> {
                 viewModelScope.launch {
                     audioFun.startSpeechToText(event.updateText, event.finished)
                 }
@@ -126,9 +122,9 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch(Dispatchers.IO) {
             //NOTE: Need to fix the loading state
             /*val currentState =
-                (_mealAppUiState.value as? MealAppUiState.Loading) ?: MealAppUiState.Loading()
-            _mealAppUiState.value = currentState.copy(isLoading = true)
-            _mealAppUiState.value = currentState*/
+                (_recipesUiState.value as? RecipesUiState.Loading) ?: RecipesUiState.Loading()
+            _recipesUiState.value = currentState.copy(isLoading = true)
+            _recipesUiState.value = currentState*/
             try {
                 val response = generativeModel.generateContent(
                     content(role = "user") {
@@ -138,15 +134,15 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
                 )
                 response.text?.let { outputContent: String ->
                     val currentState =
-                        (_mealAppUiState.value as? MealAppUiState.Success) ?: MealAppUiState.Success()
+                        (_recipesUiState.value as? RecipesUiState.Success) ?: RecipesUiState.Success()
                     val updatedResponses = currentState.geminiResponses.toMutableList().apply {
                         this[index] = outputContent
                     }
-                    _mealAppUiState.value = currentState.copy(geminiResponses = updatedResponses)
+                    _recipesUiState.value = currentState.copy(geminiResponses = updatedResponses)
                 }
                 Log.d("MealApp", "sendChatWithImage: ${response.text}")
             } catch (e: Exception) {
-                _mealAppUiState.value = MealAppUiState.Error(e.localizedMessage ?: "Error")
+                _recipesUiState.value = RecipesUiState.Error(e.localizedMessage ?: "Error")
                 Log.d("MealApp", "sendChatWithImage: ${e.localizedMessage}")
             }
         }
@@ -165,15 +161,15 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
                 )
                 response.text?.let { outputContent: String ->
                     val currentState =
-                        (_mealAppUiState.value as? MealAppUiState.Success) ?: MealAppUiState.Success()
+                        (_recipesUiState.value as? RecipesUiState.Success) ?: RecipesUiState.Success()
                     val updatedResponses = currentState.geminiResponses.toMutableList().apply {
                         this[index] = outputContent
                     }
-                    _mealAppUiState.value = currentState.copy(geminiResponses = updatedResponses)
+                    _recipesUiState.value = currentState.copy(geminiResponses = updatedResponses)
                 }
                 Log.d("MealApp", "sendChatWithImage: ${response.text}")
             } catch (e: Exception) {
-                _mealAppUiState.value = MealAppUiState.Error(e.localizedMessage ?: "Error")
+                _recipesUiState.value = RecipesUiState.Error(e.localizedMessage ?: "Error")
                 Log.d("MealApp", "sendChatWithImage: ${e.localizedMessage}")
             }
         }
@@ -190,15 +186,15 @@ class MealAppViewModel(application: Application) : AndroidViewModel(application)
                 )
                 response.text?.let { outputContent: String ->
                     val currentState =
-                        (_mealAppUiState.value as? MealAppUiState.Success) ?: MealAppUiState.Success()
+                        (_recipesUiState.value as? RecipesUiState.Success) ?: RecipesUiState.Success()
                     val updatedResponses = currentState.geminiResponses.toMutableList().apply {
                         this[index] = outputContent
                     }
-                    _mealAppUiState.value = currentState.copy(geminiResponses = updatedResponses)
+                    _recipesUiState.value = currentState.copy(geminiResponses = updatedResponses)
                 }
                 Log.d("MealApp", "sendChatWithoutImage: ${response.text}")
             } catch (e: Exception) {
-                _mealAppUiState.value = MealAppUiState.Error(e.localizedMessage ?: "Error")
+                _recipesUiState.value = RecipesUiState.Error(e.localizedMessage ?: "Error")
                 Log.d("MealApp", "sendChatWithoutImage: ${e.localizedMessage}")
             }
         }

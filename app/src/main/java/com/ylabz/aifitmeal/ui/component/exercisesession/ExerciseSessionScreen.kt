@@ -16,18 +16,36 @@
 package com.ylabz.aifitmeal.ui.component.exercisesession
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -42,24 +60,16 @@ fun ExerciseSessionScreen(
     permissionsGranted: Boolean,
     uiState: ExerciseSessionViewModel.UiState,
     readCalories: () -> Unit = {},
+    calorieData: MutableState<String?>,
     onPermissionsResult: () -> Unit = {},
     onPermissionsLaunch: (Set<String>) -> Unit = {},
 ) {
-
-    // Remember the last error ID, such that it is possible to avoid re-launching the error
-    // notification for the same error when the screen is recomposed, or configuration changes etc.
     val errorId = rememberSaveable { mutableStateOf(UUID.randomUUID()) }
 
     LaunchedEffect(uiState) {
-        // If the initial data load has not taken place, attempt to load the data.
         if (uiState is ExerciseSessionViewModel.UiState.Uninitialized) {
             onPermissionsResult()
         }
-
-        // The [ExerciseSessionViewModel.UiState] provides details of whether the last action was a
-        // success or resulted in an error. Where an error occurred, for example in reading and
-        // writing to Health Connect, the user is notified, and where the error is one that can be
-        // recovered from, an attempt to do so is made.
         if (uiState is ExerciseSessionViewModel.UiState.Error && errorId.value != uiState.uuid) {
             Log.d("ExerciseSessionScreen", "Error advice: ${uiState.exception}")
             errorId.value = uiState.uuid
@@ -69,26 +79,84 @@ fun ExerciseSessionScreen(
     if (uiState != ExerciseSessionViewModel.UiState.Uninitialized) {
         Column(
             verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .padding(8.dp) // Reduced padding
         ) {
             if (!permissionsGranted) {
-                Button(
-                    onClick = {
-                        onPermissionsLaunch(permissions)
-                    }
+                ElevatedButton(
+                    onClick = { onPermissionsLaunch(permissions) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp), // Reduced padding
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    contentPadding = PaddingValues(8.dp) // Reduced content padding
                 ) {
-                    Text(text = "permissions")//stringResource(R.string.permissions_button_label))
+                    Icon(
+                        Icons.Default.RestaurantMenu,
+                        contentDescription = "Request Permissions",
+                        tint = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier.size(18.dp) // Smaller icon
+                    )
+                    Spacer(modifier = Modifier.width(4.dp)) // Reduced spacing
+                    Text(
+                        text = "Request Permissions",
+                        style = MaterialTheme.typography.bodyMedium.copy( // Smaller text style
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondary
+                        )
+                    )
                 }
             } else {
-                Button(
+                Row(
                     modifier = Modifier
-                        .height(48.dp)
-                        .padding(4.dp),
-                    onClick = {
-                        readCalories()
-                    }
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp), // Reduced padding
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("check Cal") //stringResource(id = R.string.insert_exercise_session))
+                    ElevatedButton(
+                        onClick = { readCalories() },
+                        modifier = Modifier
+                            .height(40.dp) // Reduced button height
+                            .padding(end = 8.dp), // Reduced padding
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        ),
+                        contentPadding = PaddingValues(8.dp) // Reduced content padding
+                    ) {
+                        Icon(
+                            Icons.Default.LocalDining,
+                            contentDescription = "Check Calories",
+                            tint = MaterialTheme.colorScheme.onSecondary,
+                            modifier = Modifier.size(18.dp) // Smaller icon
+                        )
+                        Spacer(modifier = Modifier.width(4.dp)) // Reduced spacing
+                        Text(
+                            text = "Check Calories",
+                            style = MaterialTheme.typography.bodyMedium.copy( // Smaller text style
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondary
+                            )
+                        )
+                    }
+                    Text(
+                        text = "Total Calories: ${calorieData.value}",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(8.dp) // Reduced padding
+                    )
                 }
             }
         }
@@ -101,8 +169,23 @@ fun PreviewExerciseSessionScreen() {
     ExerciseSessionScreen(
         permissions = setOf("permission1", "permission2"),
         permissionsGranted = false,
-        uiState = ExerciseSessionViewModel.UiState.Uninitialized,
+        uiState = ExerciseSessionViewModel.UiState.Done,
         readCalories = { /* Mocked readCalories function */ },
+        calorieData = rememberSaveable { mutableStateOf("1232.07") },
+        onPermissionsResult = { /* Mocked onPermissionsResult function */ },
+        onPermissionsLaunch = { /* Mocked onPermissionsLaunch function */ }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewExerciseSessionScreenTrue() {
+    ExerciseSessionScreen(
+        permissions = setOf("permission1", "permission2"),
+        permissionsGranted = true,
+        uiState = ExerciseSessionViewModel.UiState.Done,
+        readCalories = { /* Mocked readCalories function */ },
+        calorieData = rememberSaveable { mutableStateOf("1232.07") },
         onPermissionsResult = { /* Mocked onPermissionsResult function */ },
         onPermissionsLaunch = { /* Mocked onPermissionsLaunch function */ }
     )

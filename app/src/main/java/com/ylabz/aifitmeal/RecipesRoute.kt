@@ -6,34 +6,23 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ylabz.aifitmeal.data.HealthConnectManager
 import com.ylabz.aifitmeal.ui.component.TwoTextAreasTabs
-import com.ylabz.aifitmeal.ui.component.exercisesession.ExerciseSessionViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.io.File
 import java.io.FileOutputStream
 
 @Composable
-fun MealAppRoute(
-    mealAppViewModel: MealAppViewModel = viewModel(),
+fun RecipesRoute(
+    recipesViewModel: RecipesViewModel = viewModel(),
     healthConnectManager: HealthConnectManager,
     bitmap: Bitmap?,
     calorieData: String? = null
@@ -41,8 +30,8 @@ fun MealAppRoute(
 
 
 
-    val onEvent = mealAppViewModel::onEvent
-    val mlState by mealAppViewModel.mealAppUiState.collectAsStateWithLifecycle()
+    val onEvent = recipesViewModel::onEvent
+    val mlState by recipesViewModel.recipesUiState.collectAsStateWithLifecycle()
     MLScreen(
         onEvent = onEvent,
         mealUiState = mlState,
@@ -57,14 +46,14 @@ fun MealAppRoute(
 @Composable
 internal fun MLScreen(
     modifier: Modifier = Modifier,
-    onEvent: (MLEvent) -> Unit,
-    mealUiState: MealAppUiState,
+    onEvent: (RecipesEvent) -> Unit,
+    mealUiState: RecipesUiState,
     bitmap: Bitmap?,
     calorieData: String?,
     healthConnectManager: HealthConnectManager
 ) {
     when (mealUiState) {
-        is MealAppUiState.Loading -> {
+        is RecipesUiState.Loading -> {
             MLContent(
                 modifier = modifier,
                 onEvent = onEvent,
@@ -77,7 +66,7 @@ internal fun MLScreen(
             )
         }
 
-        is MealAppUiState.Success -> {
+        is RecipesUiState.Success -> {
             MLContent(
                 modifier = modifier,
                 onEvent = onEvent,
@@ -89,7 +78,7 @@ internal fun MLScreen(
             )
         }
 
-        is MealAppUiState.Error -> {
+        is RecipesUiState.Error -> {
             MLContent(
                 modifier = modifier,
                 onEvent = onEvent,
@@ -126,7 +115,7 @@ fun drawableToFilePath(context: Context, drawableId: Int, fileName: String): Str
 @Composable
 internal fun MLContent(
     modifier: Modifier = Modifier,
-    onEvent: (MLEvent) -> Unit,
+    onEvent: (RecipesEvent) -> Unit,
     healthConnectManager: HealthConnectManager,
     result: List<String>,
     bitmap : Bitmap?,

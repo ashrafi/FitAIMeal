@@ -47,16 +47,10 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        Text(
-            text = "Fridge Snapshot",
-            style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -102,7 +96,14 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
                 ) {
                     Icon(imageVector = Icons.Default.Camera, contentDescription = "Retake Picture")
                 }
-
+                if (!isImageVisible) {
+                    Text(
+                        text = "Fridge Snapshot",
+                        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 24.sp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
                 FloatingActionButton(
                     onClick = { isImageVisible = !isImageVisible },
                     modifier = Modifier
@@ -126,8 +127,11 @@ private fun rotateBitmapIfRequired(context: Context, bitmap: Bitmap): Bitmap {
     saveBitmapToFile(bitmap, tempFile)
 
     val exif = ExifInterface(tempFile.absolutePath)
-    val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+    var orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
     Log.d("FoodPic", "Orientation: $orientation")
+    // NOTE : Open ticket with Google about this
+    orientation = 6
+
     val matrix = Matrix()
     when (orientation) {
         ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
