@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -53,105 +56,125 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 fun TwoTextAreasTabs(
     geminiText: List<String>,
     bitmap: Bitmap?,
-    caloriesText: String  = 500.toString(),
+    caloriesText: String = "500",
     onEvent: (RecipesEvent) -> Unit,
     errorMessage: String,
     showError: Boolean = false,
     onErrorDismiss: () -> Unit,
-    isLoading: Boolean = false // Add this parameter
+    isLoading: Boolean = false
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabNames = listOf("recipe", "nutrition")
+    val tabNames = listOf("Recipe", "Nutrition")
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // Enhanced TabRow with Material 3 design
         TabRow(
             selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.background(MaterialTheme.colorScheme.primary)
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            indicator = { tabPositions ->
+                TabRowDefaults.Indicator(
+                    Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                    color = MaterialTheme.colorScheme.primary,
+                    height = 4.dp // Adds a visual indicator below the selected tab
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
             tabNames.forEachIndexed { index, title ->
                 Tab(
-                    text = { Text(title, color = MaterialTheme.colorScheme.onPrimary) },
+                    text = {
+                        Text(
+                            title,
+                            color = if (selectedTabIndex == index)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = if (selectedTabIndex == index)
+                                MaterialTheme.typography.titleMedium
+                            else
+                                MaterialTheme.typography.bodyMedium
+                        )
+                    },
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
-                    modifier = Modifier.background(MaterialTheme.colorScheme.primary)
+                    modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
                 )
             }
         }
 
+        // Error Snackbar
         if (showError) {
             Snackbar(
                 action = {
                     TextButton(onClick = onErrorDismiss) {
                         Text(
                             text = "Dismiss",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            color = MaterialTheme.colorScheme.onError,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 },
-                modifier = Modifier.padding(16.dp),
                 containerColor = MaterialTheme.colorScheme.error,
-                contentColor = Color.White
+                contentColor = MaterialTheme.colorScheme.onError,
+                modifier = Modifier.padding(16.dp)
             ) {
                 Text(
                     text = errorMessage,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
 
+        // Loading Indicator
         if (isLoading) {
             CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .align(Alignment.CenterHorizontally),
-                color = MaterialTheme.colorScheme.primary
+                    .align(Alignment.CenterHorizontally)
             )
         }
 
+        // Content Section
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .padding(16.dp)
         ) {
             when (selectedTabIndex) {
                 0 -> PromptSection(
-                    selectedTabIndex,
-                    bitmap,
-                    geminiText.getOrNull(selectedTabIndex) ?: "",
-                    "   🍛   🥙   Recipe   🥗   🍱  ",
-                    "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. " +
-                            "It's OK if not exact but just your best guess.",
-                    onEvent,
-                    onErrorDismiss
+                    index = selectedTabIndex,
+                    bitmap = bitmap,
+                    ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
+                    buttonText = "   🍛   🥙   Recipe   🥗   🍱  ",
+                    initialPrompt = "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. It's OK if not exact but just your best guess.",
+                    onEvent = onEvent,
+                    onErrorDismiss = onErrorDismiss
                 )
 
                 1 -> PromptSection(
-                    selectedTabIndex,
-                    bitmap,
-                    geminiText.getOrNull(selectedTabIndex) ?: "",
-                    "   💪   🫀   Nutrition   🫁   🧠 ",
-                    "You just provided a recipe with all the ingredients. What is the nutritional information of dinner recipe you just provided?  ",
-                    onEvent,
-                    onErrorDismiss
+                    index = selectedTabIndex,
+                    bitmap = bitmap,
+                    ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
+                    buttonText = "   💪   🫀   Nutrition   🫁   🧠 ",
+                    initialPrompt = "You just provided a recipe with all the ingredients. What is the nutritional information of dinner recipe you just provided?  ",
+                    onEvent = onEvent,
+                    onErrorDismiss = onErrorDismiss
                 )
             }
         }
     }
 }
-
 
 
 @Composable
@@ -166,18 +189,16 @@ fun PromptSection(
 ) {
     var isPromptVisible by rememberSaveable { mutableStateOf(false) }
     val icon = if (isPromptVisible) Icons.TwoTone.UnfoldLess else Icons.TwoTone.UnfoldMore
-    //var prompt = "Please explain $initialPrompt $speechText. Notes:$noteText. Thank you for your help!"
-    //var prompt by rememberSaveable { mutableStateOf("Please explain $initialPrompt $speechText. Notes:$noteText. Thank you for your help!") }
     var prompt by rememberSaveable { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+
     // Watch for changes in ansText
     LaunchedEffect(ansText) {
         isLoading = false
     }
 
     LaunchedEffect(initialPrompt) {
-        prompt =
-            "$initialPrompt Thank you for your help!"
+        prompt = "$initialPrompt Thank you for your help!"
     }
 
     Column {
@@ -185,25 +206,25 @@ fun PromptSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (bitmap != null) {
                     Image(
-                        bitmap = bitmap!!.asImageBitmap(),
+                        bitmap = bitmap.asImageBitmap(),
                         contentDescription = "Image Preview",
                         modifier = Modifier
-                            .size(43.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.background)
+                            .background(MaterialTheme.colorScheme.surface)
                     )
                 }
 
-                Spacer(modifier = Modifier.weight(0.1f))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 TextField(
                     value = prompt,
-                    label = { Text(stringResource(id = R.string.label_prompt)) },
+                    label = { Text("Prompt") },
                     onValueChange = { prompt = it },
                     modifier = Modifier
                         .weight(1f)
@@ -213,19 +234,22 @@ fun PromptSection(
                 )
             }
         }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = "Expand/Collapse",
                 modifier = Modifier
-                    .size(43.dp)
+                    .size(24.dp)
                     .clickable { isPromptVisible = !isPromptVisible }
                     .padding(end = 8.dp)
             )
+
             Button(
                 onClick = {
                     isLoading = true
@@ -244,17 +268,15 @@ fun PromptSection(
             }
         }
 
-
         Column {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        //.fillMaxWidth()
-                        .size(32.dp)
+                        .size(24.dp)
                         .padding(horizontal = 8.dp)
                         .align(Alignment.CenterHorizontally),
-                    color = Color(0xFF388E3C),
-                    strokeWidth = 7.dp // Adjust the stroke width as needed
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 4.dp
                 )
             }
             MarkdownText(
@@ -263,27 +285,15 @@ fun PromptSection(
             )
         }
     }
-    /*Text(
-        text = ansText,
-        textAlign = TextAlign.Start,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp)
-    )*/
-
 }
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewFourTextAreasTabs() {
+fun PreviewTwoTextAreasTabs() {
     TwoTextAreasTabs(
         geminiText = listOf("Recipe text", "Nutrition text"),
         bitmap = Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888),
-        caloriesText = "textFieldValue",
+        caloriesText = "500",
         onEvent = {},
         errorMessage = "Error occurred",
         showError = true,

@@ -89,8 +89,8 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
                 FloatingActionButton(
                     onClick = { cameraLauncher.launch(null) },
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp),
+                        .align(Alignment.BottomEnd)// Center FAB when image is hidden
+                        .padding(if (isImageVisible) 16.dp else 0.dp), // Reduce padding when image is hidden
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
@@ -107,8 +107,8 @@ fun FoodPic(bitmap: MutableState<Bitmap?>) {
                 FloatingActionButton(
                     onClick = { isImageVisible = !isImageVisible },
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp),
+                        .align(Alignment.BottomStart)// Center FAB when image is hidden
+                        .padding(if (isImageVisible) 16.dp else 0.dp), // Reduce padding when image is hidden
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 ) {

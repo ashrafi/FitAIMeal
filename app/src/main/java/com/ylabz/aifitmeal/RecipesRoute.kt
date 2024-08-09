@@ -124,7 +124,6 @@ internal fun MLContent(
     loading: Boolean = false,
 ) {
     Column(modifier = modifier) {
-
         TwoTextAreasTabs(
             geminiText = result,
             bitmap = bitmap,
