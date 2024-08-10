@@ -30,9 +30,10 @@ Gemini Nutritionist automates meal planning by integrating AI with Google Fit, c
 * **Simple Weight Management:**  
    Support your weight goals with hassle-free healthy eating.
 
+<img src="AppImage.png" alt="drawing" width="200"/>
 
-![AppImage.png](AppImage.png)
-[YouTube Vid](https://youtu.be/5kw6YISnJjc)
+[YouTube Vid](https://youtu.be/5kw6YISnJjc)  
+
 [Article](https://zoewave.medium.com/your-fridge-is-your-nutritionist-ee694a68918a)
 
 ## Getting Started
