@@ -1,9 +1,13 @@
 package com.ylabz.aifitmeal.ui.component
 
 import android.graphics.Bitmap
+import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +21,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.twotone.UnfoldLess
 import androidx.compose.material.icons.twotone.UnfoldMore
 import androidx.compose.material3.Button
@@ -24,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Tab
@@ -45,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -165,7 +173,7 @@ fun TwoTextAreasTabs(
                         bitmap = bitmap,
                         ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
                         buttonText = "   🍛   🥙   Recipe   🥗   🍱  ",
-                        initialPrompt = "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. It's OK if not exact but just your best guess.",
+                        initialPrompt = "Please use the provided image and to the best of your ability create a recipe for a dinner meal around $caloriesText calories. It's OK if not exact but just your best guess is enough.",
                         onEvent = onEvent,
                         onErrorDismiss = onErrorDismiss
                     )
@@ -175,7 +183,7 @@ fun TwoTextAreasTabs(
                         bitmap = bitmap,
                         ansText = geminiText.getOrNull(selectedTabIndex) ?: "",
                         buttonText = "   💪   🫀   Nutrition   🫁   🧠 ",
-                        initialPrompt = "You just provided a recipe with all the ingredients. What is the nutritional information of dinner recipe you just provided?  ",
+                        initialPrompt = "You just provided a wonderful dinner recipe with all the ingredients. What is the nutritional information of recipe you just provided?  ",
                         onEvent = onEvent,
                         onErrorDismiss = onErrorDismiss
                     )
@@ -244,11 +252,21 @@ fun PromptSection(
             }
         }
 
+        val context = LocalContext.current
+        val tts = remember {
+            TextToSpeech(context) { status ->
+                if (status != TextToSpeech.SUCCESS) {
+                    Log.e("TTS", "Initialization failed")
+                }
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // Ensures button and icons are spaced out
         ) {
             Icon(
                 imageVector = icon,
@@ -263,29 +281,51 @@ fun PromptSection(
                 onClick = {
                     isLoading = true
                     try {
-                        if (bitmap != null) {
-                            onEvent(RecipesEvent.GenAiChatResponseImg(prompt, bitmap, index))
+                        bitmap?.let {
+                            onEvent(RecipesEvent.GenAiChatResponseImg(prompt, it, index))
                         }
                     } catch (e: Exception) {
                         onErrorDismiss()
                         isLoading = false
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.weight(1f) // Ensures button takes up available space
             ) {
                 Text(text = buttonText)
             }
+
+            // Conditionally display the speaker icon if there is text to speak
+            if (!ansText.isNullOrEmpty()) {
+                IconButton(
+                    onClick = {
+                        if (tts.isSpeaking) {
+                            tts.stop() // Stop TTS if it's currently speaking
+                        } else {
+                            tts.speak(ansText, TextToSpeech.QUEUE_FLUSH, null, null) // Start TTS
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VolumeUp, // Speaker icon
+                        contentDescription = "Read aloud",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
 
-        Column {
+
+
+
+        Box {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .size(24.dp)
-                        .padding(horizontal = 8.dp)
-                        .align(Alignment.CenterHorizontally),
+                        .size(30.dp)
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.Center),
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 4.dp
+                    strokeWidth = 7.dp
                 )
             }
             MarkdownText(
