@@ -42,8 +42,8 @@ Gemini Nutritionist automates meal planning by integrating AI with Google Fit, c
 
 * Programming Languages: Kotlin - ComposeUI
 * Development Tools: Android Studio - Android Studio Ladybug | 2024.2.1 Canary 5
-* Google Fit
-* Google Health Connect
+* [Google Fit](https://www.google.com/fit/)
+* [Google Health Connect](https://health.google/health-connect-android/)
   
 ### Setting Up the Development Environment:
 
